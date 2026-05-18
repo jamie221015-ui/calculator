@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MORE｜報價計算機</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: #d6c4b0;
+    background-image: radial-gradient(circle at 30% 20%, #e8d8c8 0%, #c8b09a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    padding: 16px;
+  }
+
+  .calculator {
+    width: 100%;
+    max-width: 400px;
+    background: #f5f0eb;
+    border-radius: 28px;
+    box-shadow:
+      0 30px 60px rgba(100,70,40,0.30),
+      0 8px 20px rgba(100,70,40,0.20),
+      inset 0 1px 0 rgba(255,255,255,0.8),
+      inset 0 -2px 4px rgba(100,70,40,0.08);
+    padding: 22px 20px 26px;
+  }
+
+  /* Brand */
+  .brand-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .brand-left { display: flex; align-items: center; gap: 9px; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 10px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(139,90,43,0.15); flex-shrink: 0;
+  }
+  .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .brand-name { font-size: 13px; font-weight: 800; color: #8a6a50; }
+  .brand-sub { font-size: 9px; color: #b8a090; margin-top: 1px; letter-spacing: 0.06em; }
+  .btn-reset {
+    border: 1.5px solid #d8c8bc; background: transparent;
+    color: #b8a090; border-radius: 20px; padding: 5px 14px;
+    font-size: 13px; cursor: pointer; font-weight: 700; display: none;
+  }
+
+  /* Screen */
+  .screen {
+    background: #eee8e0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    min-height: 200px;
+    box-shadow: inset 0 2px 6px rgba(160,120,80,0.10);
+    position: relative;
+    border: 1px solid #e0d8d0;
+  }
+  .screen-type {
+    font-size: 10px; font-weight: 700; color: #b8a090;
+    letter-spacing: 0.12em; margin-bottom: 6px;
+  }
+  .screen-items {
+    font-size: 11px; color: #8a6a50; line-height: 1.8;
+    max-height: 120px; overflow-y: auto; margin-bottom: 4px;
+  }
+  .screen-items::-webkit-scrollbar { width: 2px; }
+  .screen-items::-webkit-scrollbar-thumb { background: #d0c0b0; border-radius: 2px; }
+  .screen-divider { height: 1px; background: #d8d0c8; margin: 6px 0; }
+  .screen-total {
+    text-align: right;
+    font-size: 20px; font-weight: 700;
+    color: #7a5840;
+    letter-spacing: 0.02em;
+    display: none;
+  }
+  .screen-empty {
+    color: #c8b8a8; font-size: 13px;
+    position: absolute; bottom: 14px; right: 16px;
+  }
+  .item-row-screen { display: flex; justify-content: space-between; }
+  .item-row-screen .iname { color: #a09080; }
+  .item-row-screen .iprice { color: #7a5840; font-weight: 700; }
+
+  /* Section label */
+  .section-label {
+    font-size: 10px; font-weight: 700; color: #b8a090;
+    letter-spacing: 0.1em; margin-bottom: 8px; margin-top: 2px;
+  }
+
+  /* Price tabs */
+  .price-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .price-tab {
+    flex: 1; padding: 9px 0; border-radius: 10px; border: none; cursor: pointer;
+    background: #ede6de; color: #a08870; font-weight: 700; font-size: 13px;
+    box-shadow: 0 3px 0 #d8cec4;
+    transition: all 0.1s; position: relative; top: 0;
+  }
+  .price-tab:active { top: 2px; box-shadow: 0 1px 0 #d8cec4; }
+  .price-tab.active {
+    background: #c0a898; color: #fff;
+    box-shadow: 0 3px 0 #a08878;
+  }
+
+  /* Button grid */
+  .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .calc-btn {
+    padding: 13px 10px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 700;
+    transition: all 0.1s; position: relative; top: 0;
+  }
+  .calc-btn:active { top: 3px; }
+
+  .btn-product {
+    background: #ede6de; color: #6a5040;
+    grid-column: span 3; font-size: 14px;
+    box-shadow: 0 4px 0 #d8cec4;
+    border: 1px dashed #c8b8a8;
+  }
+  .btn-product:active { box-shadow: 0 1px 0 #d8cec4; }
+  .btn-shipping {
+    background: #ede6de; color: #6a5040;
+    box-shadow: 0 4px 0 #d8cec4;
+  }
+  .btn-shipping:active { box-shadow: 0 1px 0 #d8cec4; }
+  .btn-note {
+    background: #ede6de; color: #6a5040;
+    box-shadow: 0 4px 0 #d8cec4;
+  }
+  .btn-note:active { box-shadow: 0 1px 0 #d8cec4; }
+  .btn-copy {
+    background: #8a6a52; color: #fff;
+    font-size: 15px;
+    box-shadow: 0 4px 0 #6a4a38;
+  }
+  .btn-copy:active { box-shadow: 0 1px 0 #6a4a38; }
+  .btn-summary-calc {
+    background: #8a6a52; color: #fff;
+    box-shadow: 0 4px 0 #6a4a38;
+    font-size: 15px;
+  }
+  .btn-summary-calc:active { box-shadow: 0 1px 0 #6a4a38; }
+  .btn-manage {
+    background: #ede6de; color: #6a5040;
+    box-shadow: 0 4px 0 #d8cec4;
+  }
+  .btn-manage:active { box-shadow: 0 1px 0 #d8cec4; }
+
+  /* Overlays */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100;
+    display: none; align-items: flex-end;
+  }
+  .overlay.show { display: flex; }
+  .sheet {
+    background: #fff; border-radius: 20px 20px 0 0; padding: 20px;
+    width: 100%; max-height: 78vh; display: flex; flex-direction: column;
+    box-shadow: 0 -4px 20px rgba(139,90,43,0.12);
+  }
+  .sheet-title { font-size: 15px; font-weight: 800; color: #7a4a28; margin-bottom: 12px; }
+  .search-input {
+    width: 100%; border: 1.5px solid #DBC8B6; border-radius: 8px;
+    padding: 9px 12px; font-size: 14px; background: #faf6f2; outline: none;
+    margin-bottom: 8px; color: #5a4030;
+  }
+  .search-input:focus { border-color: #9A6852; }
+  .product-list { overflow-y: auto; flex: 1; }
+  .product-option {
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 4px;
+    background: #f7f2ee; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .product-option:hover { background: #ede0d4; }
+  .product-option-name { font-size: 14px; color: #5a4030; font-weight: 600; }
+  .product-option-price { font-size: 13px; color: #C6A992; font-weight: 700; }
+  .no-result { text-align: center; color: #C4B1A0; padding: 20px; }
+  .btn-cancel {
+    width: 100%; margin-top: 10px; padding: 12px; border-radius: 10px;
+    border: 1px solid #DBC8B6; background: #fff; color: #A59482;
+    cursor: pointer; font-size: 14px; font-weight: 700;
+  }
+
+  /* Manager sheet */
+  .item-sheet {
+    background: #fff; border-radius: 20px 20px 0 0; padding: 20px;
+    width: 100%; max-height: 80vh; display: flex; flex-direction: column;
+  }
+  .manage-item-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid #f0ebe6;
+  }
+  .manage-item-info { flex: 1; min-width: 0; }
+  .manage-item-name { font-size: 14px; font-weight: 600; color: #5a4030; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .manage-item-unit { font-size: 12px; color: #C6A992; }
+  .qty-controls { display: flex; align-items: center; gap: 6px; }
+  .btn-qty {
+    width: 28px; height: 28px; border-radius: 50%; border: none;
+    cursor: pointer; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-minus { background: #ede0d4; color: #A59482; box-shadow: 0 2px 0 #C4B1A0; }
+  .btn-plus { background: #C6A992; color: #fff; box-shadow: 0 2px 0 #A59482; }
+  .qty-val { font-size: 15px; font-weight: 700; color: #5a4030; min-width: 24px; text-align: center; }
+  .manage-item-total { font-size: 14px; font-weight: 700; color: #7a4a28; min-width: 72px; text-align: right; }
+  .btn-remove { border: none; background: none; color: #DBC8B6; cursor: pointer; font-size: 18px; padding: 0; }
+  .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .btn-close-x { border: none; background: none; font-size: 22px; color: #C4B1A0; cursor: pointer; }
+
+  /* Input modal */
+  .input-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .input-modal.show { display: flex; }
+  .input-box {
+    background: #fff; border-radius: 20px; padding: 24px;
+    width: 100%; max-width: 320px;
+    box-shadow: 0 8px 32px rgba(139,90,43,0.18);
+  }
+  .input-box-title { font-size: 15px; font-weight: 800; color: #7a4a28; margin-bottom: 14px; }
+  .modal-input {
+    width: 100%; border: 1.5px solid #DBC8B6; border-radius: 8px;
+    padding: 11px 14px; font-size: 16px;
+    background: #faf6f2; outline: none; color: #3a2818; margin-bottom: 14px;
+  }
+  .modal-input:focus { border-color: #9A6852; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-ok {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    background: #9A6852; color: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 3px 0 #7a4a28;
+  }
+  .modal-cancel {
+    flex: 1; padding: 12px; border-radius: 10px;
+    border: 1px solid #DBC8B6; background: #fff;
+    color: #A59482; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+
+  /* Summary */
+  .summary-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300;
+    display: none; align-items: flex-end;
+  }
+  .summary-overlay.show { display: flex; }
+  .summary-sheet {
+    background: #fff; border-radius: 20px 20px 0 0; width: 100%;
+    max-height: 85vh; display: flex; flex-direction: column;
+  }
+  .summary-header { padding: 20px 20px 0; display: flex; justify-content: space-between; align-items: center; }
+  .summary-title { font-size: 17px; font-weight: 700; color: #7a4a28; }
+  .summary-body { overflow-y: auto; flex: 1; padding: 16px 20px; }
+  .price-badge {
+    display: inline-block; background: #ede0d4; border-radius: 20px;
+    padding: 4px 14px; font-size: 12px; font-weight: 700; color: #7a4a28; margin-bottom: 14px;
+  }
+  .sum-item-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0ebe6; }
+  .sum-item-info { flex: 1; }
+  .sum-item-name { font-size: 14px; font-weight: 600; color: #5a4030; }
+  .sum-item-sub { font-size: 12px; color: #A59482; }
+  .sum-item-right { text-align: right; }
+  .sum-item-total { font-size: 15px; font-weight: 700; color: #7a4a28; }
+  .sum-saved { font-size: 11px; color: #c0392b; font-weight: 700; }
+  .subtotals-box { background: #faf6f2; border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
+  .sub-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .sub-row:last-child { margin-bottom: 0; }
+  .sub-row span:first-child { font-size: 13px; color: #A59482; }
+  .sub-row span:last-child { font-size: 13px; color: #5a4030; font-weight: 600; }
+  .grand-box {
+    background: #7a6352;
+    border-radius: 14px; padding: 16px 18px; margin-bottom: 12px;
+  }
+  .grand-box-row { display: flex; justify-content: space-between; align-items: center; }
+  .grand-box-label { color: #DBC8B6; font-size: 15px; font-weight: 700; }
+  .grand-box-amount { color: #fff; font-size: 26px; font-weight: 700; }
+  .savings-row {
+    margin-top: 8px; background: rgba(255,255,255,0.12); border-radius: 8px;
+    padding: 6px 12px; display: none; justify-content: space-between;
+  }
+  .savings-row span:first-child { color: #DBC8B6; font-size: 12px; }
+  .savings-row span:last-child { color: #ffd580; font-size: 15px; font-weight: 700; }
+  .note-box {
+    background: #faf6f2; border-radius: 10px;
+    padding: 10px 14px; font-size: 13px; color: #A59482; display: none;
+  }
+  .summary-footer { padding: 12px 20px 28px; }
+  .btn-close-summary {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    background: #C6A992; color: #fff;
+    cursor: pointer; font-size: 15px; font-weight: 700;
+  }
+
+  /* Screenshot modal */
+  .screenshot-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 400;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .screenshot-overlay.show { display: flex; }
+  .screenshot-wrap {
+    width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px;
+  }
+  /* The receipt card itself */
+  .receipt-card {
+    background: #f5f0eb;
+    border-radius: 20px;
+    padding: 22px 20px 20px;
+    box-shadow: 0 8px 32px rgba(100,70,40,0.25);
+  }
+  .receipt-brand {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    padding-bottom: 12px; border-bottom: 1px solid #e0d8d0;
+  }
+  .receipt-logo {
+    width: 32px; height: 32px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+  }
+  .receipt-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .receipt-brand-name { font-size: 12px; font-weight: 800; color: #7a5840; }
+  .receipt-brand-sub { font-size: 9px; color: #b8a090; }
+  .receipt-badge {
+    display: inline-block; background: #8a6a52; border-radius: 20px;
+    padding: 3px 12px; font-size: 11px; font-weight: 700; color: #fff;
+    margin-bottom: 12px;
+  }
+  .receipt-item {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 7px 0; border-bottom: 1px solid #ede6de;
+  }
+  .receipt-item:last-child { border-bottom: none; }
+  .receipt-item-left { flex: 1; }
+  .receipt-item-name { font-size: 13px; font-weight: 600; color: #5a4030; }
+  .receipt-item-qty { font-size: 11px; color: #a09080; margin-top: 1px; }
+  .receipt-item-right { text-align: right; }
+  .receipt-item-price { font-size: 13px; font-weight: 700; color: #5a4030; }
+  .receipt-item-orig { font-size: 10px; color: #c0a898; text-decoration: line-through; }
+  .receipt-divider { height: 1px; background: #d8d0c8; margin: 12px 0; }
+  .receipt-total-row {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .receipt-total-label { font-size: 13px; color: #a09080; font-weight: 600; }
+  .receipt-total-amount { font-size: 22px; font-weight: 800; color: #7a5840; }
+  .receipt-note { font-size: 11px; color: #b8a090; margin-top: 8px; }
+  .receipt-footer { font-size: 9px; color: #c0b0a0; text-align: center; margin-top: 14px; letter-spacing: 0.06em; }
+  /* Action buttons below card */
+  .screenshot-actions { display: flex; gap: 10px; }
+  .btn-screenshot {
+    flex: 1; padding: 14px; border-radius: 14px; border: none;
+    background: #8a6a52; color: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 0 #6a4a38;
+  }
+  .btn-screenshot-cancel {
+    flex: 1; padding: 14px; border-radius: 14px;
+    border: 1.5px solid #d8c8bc; background: #fff;
+    color: #a08870; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .fab-copy-code:active { transform: scale(0.95); }
+  .fab-copy-code.done { background: #c0a898; }
+</style>
+</head>
+<body>
+
+<div class="calculator">
+  <div class="brand-bar">
+    <div class="brand-left">
+      <div class="brand-logo">
+        <img src="data:image/png;base64,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" alt="MORE">
+      </div>
+      <div>
+        <div class="brand-name">MORE 報價計算機</div>
+        <div class="brand-sub">即時計算 · 一鍵複製</div>
+      </div>
+    </div>
+    <button class="btn-reset" id="btnReset" onclick="handleReset()">AC</button>
+  </div>
+
+  <div class="screen">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <div class="screen-type" id="screenType" style="margin-bottom:0;">產品（原價）</div>
+      <button onclick="openNote()" id="noteIndicator" style="border:none; background:none; cursor:pointer; font-size:10px; color:#b8a090; font-weight:700; letter-spacing:0.06em; padding:0;">備註</button>
+    </div>
+    <div class="screen-items" id="screenItems"></div>
+    <div class="screen-divider" id="screenDivider" style="display:none"></div>
+    <div class="screen-total" id="screenTotal"></div>
+    <span class="screen-empty" id="screenEmpty">0</span>
+  </div>
+
+  <div class="section-label">售價類型</div>
+  <div class="price-tabs">
+    <button class="price-tab active" onclick="setPriceType(0)">原價</button>
+    <button class="price-tab" onclick="setPriceType(1)">優惠價</button>
+    <button class="price-tab" onclick="setPriceType(2)">VIP價</button>
+  </div>
+
+  <div class="section-label">操作</div>
+  <div class="btn-grid">
+    <button class="calc-btn btn-product" onclick="openPicker()">＋ 選擇商品</button>
+    <button class="calc-btn btn-manage" onclick="openManager()">數量</button>
+    <button class="calc-btn btn-shipping" onclick="openShipping()">運費</button>
+    <button class="calc-btn btn-note" onclick="openNote()">備註</button>
+    <div style="grid-column: span 3; display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+      <button class="calc-btn btn-summary-calc" onclick="openSummary()">總計表</button>
+      <button class="calc-btn btn-copy" id="btnCopy" onclick="handleCopy()">複製報價單</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Picker -->
+<div class="overlay" id="pickerOverlay">
+  <div class="sheet">
+    <div class="sheet-title">選擇商品</div>
+    <input class="search-input" id="searchInput" placeholder="搜尋商品名稱..." oninput="renderPickerList()">
+    <div class="product-list" id="pickerList"></div>
+    <button class="btn-cancel" onclick="closePicker()">取消</button>
+  </div>
+</div>
+
+<!-- Item Manager -->
+<div class="overlay" id="managerOverlay">
+  <div class="item-sheet">
+    <div class="sheet-header">
+      <div class="sheet-title" style="margin-bottom:0">商品明細</div>
+      <button class="btn-close-x" onclick="closeManager()">✕</button>
+    </div>
+    <div class="product-list" id="managerList"></div>
+    <button class="btn-cancel" style="margin-top:10px" onclick="closeManager()">完成</button>
+  </div>
+</div>
+
+<!-- Shipping -->
+<div class="input-modal" id="shippingModal">
+  <div class="input-box">
+    <div class="input-box-title">🚚 設定運費</div>
+    <input class="modal-input" type="number" id="shippingInput" placeholder="輸入運費金額">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeShipping()">取消</button>
+      <button class="modal-ok" onclick="confirmShipping()">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Note -->
+<div class="input-modal" id="noteModal">
+  <div class="input-box">
+    <div class="input-box-title">📝 顧客備註</div>
+    <input class="modal-input" type="text" id="noteInput" placeholder="例：免運、搭配組合...">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeNote()">取消</button>
+      <button class="modal-ok" onclick="confirmNote()">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-overlay" id="summaryOverlay">
+  <div class="summary-sheet">
+    <div class="summary-header">
+      <div class="summary-title">JEROSSE · 產品試算</div>
+      <button class="btn-close-x" onclick="closeSummary()">✕</button>
+    </div>
+    <div class="summary-body" id="summaryBody"></div>
+    <div class="summary-footer">
+      <button class="btn-close-summary" onclick="closeSummary()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS = [
+  { name: "纖纖飲X", prices: [1480, 1380, 1280] },
+  { name: "爆纖錠", prices: [880, 800, 740] },
+  { name: "纖飄錠", prices: [1480, 1380, 1280] },
+  { name: "纖酵宿", prices: [990, 900, 830] },
+  { name: "紫纖飲", prices: [990, 900, 830] },
+  { name: "肽纖飲", prices: [990, 900, 830] },
+  { name: "厚焙奶茶", prices: [990, 900, 830] },
+  { name: "洗髮露", prices: [1280, 1180, 1100] },
+  { name: "養髮液", prices: [1080, 990, 900] },
+  { name: "水光錠", prices: [1680, 1580, 1480] },
+  { name: "婕肌零", prices: [990, 900, 830] },
+  { name: "雪聚露", prices: [1280, 1180, 1100] },
+  { name: "玻尿酸保濕原液", prices: [990, 900, 830] },
+  { name: "急救小白瓶", prices: [1280, 1180, 1100] },
+  { name: "護手霜", prices: [680, 630, 600] },
+  { name: "面模(精裝盒)", prices: [150, 150, 150] },
+  { name: "面模(20片)", prices: [2200, 2200, 2200] },
+  { name: "益生菌", prices: [1280, 1180, 1100] },
+  { name: "葉黃素", prices: [1080, 990, 900] },
+  { name: "晶亮凍", prices: [680, 630, 600] },
+  { name: "固樂纖", prices: [1680, 1580, 1480] },
+  { name: "正冠茶", prices: [990, 900, 830] },
+  { name: "酒國錠", prices: [680, 630, 600] },
+  { name: "爆纖錠體驗包", prices: [240, 240, 240] },
+  { name: "纖酵宿體驗包", prices: [190, 190, 190] },
+  { name: "洗髮露體驗包", prices: [30, 30, 30] },
+  { name: "婕肌零體驗包", prices: [40, 40, 40] },
+];
+const PRICE_LABELS = ["原價", "優惠價", "VIP價"];
+const ntd = n => `NT$${Number(n).toLocaleString()}`;
+
+let priceType = 0, items = [], shipping = 0, note = "";
+
+function setPriceType(t) {
+  priceType = t;
+  document.querySelectorAll('.price-tab').forEach((b,i) => b.classList.toggle('active', i===t));
+  document.getElementById('screenType').textContent = '產品（' + PRICE_LABELS[t] + '）';
+  updateScreen();
+}
+
+function updateScreen() {
+  const total = items.reduce((s,i) => s + i.prices[priceType]*i.qty, 0);
+  const grand = total + shipping;
+  const elItems = document.getElementById('screenItems');
+  const elTotal = document.getElementById('screenTotal');
+  const elDivider = document.getElementById('screenDivider');
+  const elEmpty = document.getElementById('screenEmpty');
+  const btnReset = document.getElementById('btnReset');
+
+  if (items.length === 0) {
+    elItems.innerHTML = '';
+    elTotal.style.display = 'none';
+    elDivider.style.display = 'none';
+    elEmpty.style.display = 'block';
+    btnReset.style.display = 'none';
+    const noteBtnZ = document.getElementById('noteIndicator');
+    if (noteBtnZ) noteBtnZ.textContent = note ? '備註：' + note : '備註';
+    return;
+  }
+  elEmpty.style.display = 'none';
+  btnReset.style.display = 'block';
+  const noteBtn = document.getElementById('noteIndicator');
+  if (noteBtn) noteBtn.textContent = note ? '備註：' + note : '備註';
+  elItems.innerHTML = items.map(i => {
+    const discounted = i.prices[priceType] * i.qty;
+    const original = i.prices[0] * i.qty;
+    const origLabel = priceType > 0
+      ? `<span style="font-size:9px;color:#c0a898;text-decoration:line-through;margin-right:3px;">原價 ${ntd(original)}</span>`
+      : '';
+    return `<div class="item-row-screen">
+      <span class="iname">${i.name} ×${i.qty}</span>
+      <span style="display:flex;align-items:center;gap:2px;">${origLabel}<span class="iprice">${ntd(discounted)}</span></span>
+    </div>`;
+  }).join('') +
+  (shipping > 0 ? `<div class="item-row-screen"><span class="iname">運費</span><span class="iprice">${ntd(shipping)}</span></div>` : '') +
+  (note ? `<div style="color:#8a7050;font-size:10px;margin-top:2px">📝 ${note}</div>` : '');
+  elDivider.style.display = 'block';
+  elTotal.style.display = 'block';
+  elTotal.textContent = ntd(grand);
+}
+
+function handleReset() {
+  items = []; shipping = 0; note = "";
+  document.getElementById('shippingInput').value = '';
+  document.getElementById('noteInput').value = '';
+  updateScreen();
+}
+
+function handleCopy() {
+  if (items.length === 0) return;
+  openScreenshot();
+}
+
+function openScreenshot() {
+  const total = items.reduce(function(s,i){ return s + i.prices[priceType]*i.qty; }, 0);
+  const grand = total + shipping;
+  const showOrig = priceType > 0;
+  const logoSrc = document.querySelector('.brand-logo img').src;
+
+  let itemsHtml = '';
+  items.forEach(function(i) {
+    const price = i.prices[priceType] * i.qty;
+    const orig = i.prices[0] * i.qty;
+    const origHtml = (showOrig && orig !== price)
+      ? '<div class="receipt-item-orig">' + ntd(orig) + '</div>'
+      : '';
+    itemsHtml += '<div class="receipt-item">'
+      + '<div class="receipt-item-left">'
+      + '<div class="receipt-item-name">' + i.name + '</div>'
+      + '<div class="receipt-item-qty">× ' + i.qty + '</div>'
+      + '</div>'
+      + '<div class="receipt-item-right">'
+      + origHtml
+      + '<div class="receipt-item-price">' + ntd(price) + '</div>'
+      + '</div>'
+      + '</div>';
+  });
+
+  const shipHtml = shipping > 0
+    ? '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">'
+      + '<span class="receipt-total-label">運費</span>'
+      + '<span style="font-size:13px;color:#5a4030;font-weight:600;">' + ntd(shipping) + '</span>'
+      + '</div>'
+    : '';
+
+  const noteHtml = note
+    ? '<div class="receipt-note">備註：' + note + '</div>'
+    : '';
+
+  const totalQty = items.reduce(function(s,i){ return s + i.qty; }, 0);
+  const totalSaved = showOrig
+    ? items.reduce(function(s,i){ return s + (i.prices[0] - i.prices[priceType]) * i.qty; }, 0)
+    : 0;
+
+  const savedHtml = totalSaved > 0
+    ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+      + '<span style="font-size:12px;color:#c0392b;font-weight:700;">共省下</span>'
+      + '<span style="font-size:14px;font-weight:800;color:#c0392b;">' + ntd(totalSaved) + '</span>'
+      + '</div>'
+    : '';
+
+  document.getElementById('receiptCard').innerHTML =
+    '<div class="receipt-brand">'
+    + '<div class="receipt-logo"><img src="' + logoSrc + '"></div>'
+    + '<div><div class="receipt-brand-name">MORE 報價計算機</div>'
+    + '<div class="receipt-brand-sub">JEROSSE · 產品試算</div></div>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    + '<div class="receipt-badge" style="margin-bottom:0;">' + PRICE_LABELS[priceType] + '</div>'
+    + '<span style="font-size:11px;color:#a09080;font-weight:600;">共 ' + totalQty + ' 項商品</span>'
+    + '</div>'
+    + '<div>' + itemsHtml + '</div>'
+    + '<div class="receipt-divider"></div>'
+    + shipHtml
+    + savedHtml
+    + '<div class="receipt-total-row">'
+    + '<span class="receipt-total-label">合計</span>'
+    + '<span class="receipt-total-amount">' + ntd(grand) + '</span>'
+    + '</div>'
+    + noteHtml
+    + '<div class="receipt-footer">MORE · 即時計算報價</div>';
+
+  document.getElementById('screenshotOverlay').classList.add('show');
+}
+
+function closeScreenshot() {
+  document.getElementById('screenshotOverlay').classList.remove('show');
+}
+
+function saveScreenshot() {
+  try {
+    const total = items.reduce(function(s,i){ return s + i.prices[priceType]*i.qty; }, 0);
+    const grand = total + shipping;
+    const showOrig = priceType > 0;
+    const totalQty = items.reduce(function(s,i){ return s + i.qty; }, 0);
+    const totalSaved = showOrig
+      ? items.reduce(function(s,i){ return s + (i.prices[0]-i.prices[priceType])*i.qty; }, 0)
+      : 0;
+
+    const W = 750, PAD = 48, LINE = 44, SMALL = 26;
+    const rows = items.length;
+    const extraRows = (showOrig ? rows : 0); // extra line per item for strikethrough
+    const H = 200 + rows * (LINE + (showOrig ? SMALL + 6 : 0)) + (shipping > 0 ? LINE : 0) + (totalSaved > 0 ? LINE + 16 : 0) + (note ? LINE : 0) + 100;
+
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#f5f0eb';
+    roundRect(ctx, 0, 0, W, H, 32);
+    ctx.fill();
+
+    let y = PAD;
+
+    // Header
+    ctx.fillStyle = '#7a5840';
+    ctx.font = 'bold 30px -apple-system, sans-serif';
+    ctx.fillText('MORE 報價計算機', PAD, y + 30);
+    ctx.fillStyle = '#b8a090';
+    ctx.font = '20px -apple-system, sans-serif';
+    ctx.fillText('JEROSSE · 產品試算', PAD, y + 58);
+    y += 80;
+
+    // Divider
+    ctx.strokeStyle = '#e0d8d0'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W-PAD, y); ctx.stroke();
+    y += 24;
+
+    // Badge + qty
+    ctx.fillStyle = '#8a6a52';
+    roundRect(ctx, PAD, y, 110, 36, 18); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 20px -apple-system, sans-serif';
+    ctx.fillText(PRICE_LABELS[priceType], PAD+18, y+24);
+    ctx.fillStyle = '#a09080';
+    ctx.font = '20px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('共 ' + totalQty + ' 項商品', W-PAD, y+24);
+    ctx.textAlign = 'left';
+    y += 52;
+
+    // Items
+    items.forEach(function(item) {
+      const price = item.prices[priceType] * item.qty;
+      const orig = item.prices[0] * item.qty;
+
+      ctx.fillStyle = '#5a4030';
+      ctx.font = 'bold 24px -apple-system, sans-serif';
+      ctx.fillText(item.name + ' ×' + item.qty, PAD, y + 24);
+
+      if (showOrig && orig !== price) {
+        ctx.fillStyle = '#c0a898';
+        ctx.font = '19px -apple-system, sans-serif';
+        const origText = ntd(orig);
+        ctx.textAlign = 'right';
+        ctx.fillText(origText, W-PAD, y + 20);
+        // strikethrough
+        const tw = ctx.measureText(origText).width;
+        ctx.strokeStyle = '#c0a898'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(W-PAD-tw, y+13); ctx.lineTo(W-PAD, y+13); ctx.stroke();
+
+        ctx.fillStyle = '#5a4030';
+        ctx.font = 'bold 24px -apple-system, sans-serif';
+        ctx.fillText(ntd(price), W-PAD, y + 44);
+        ctx.textAlign = 'left';
+        y += SMALL + 6;
+      } else {
+        ctx.fillStyle = '#5a4030';
+        ctx.font = 'bold 24px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(ntd(price), W-PAD, y + 24);
+        ctx.textAlign = 'left';
+      }
+
+      y += LINE;
+      ctx.strokeStyle = '#ede6de'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W-PAD, y); ctx.stroke();
+      y += 8;
+    });
+
+    y += 8;
+    // Divider
+    ctx.strokeStyle = '#d8d0c8'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W-PAD, y); ctx.stroke();
+    y += 20;
+
+    // Shipping
+    if (shipping > 0) {
+      ctx.fillStyle = '#a09080'; ctx.font = '22px -apple-system, sans-serif';
+      ctx.fillText('運費', PAD, y+24);
+      ctx.fillStyle = '#5a4030'; ctx.font = 'bold 22px -apple-system, sans-serif';
+      ctx.textAlign = 'right'; ctx.fillText(ntd(shipping), W-PAD, y+24);
+      ctx.textAlign = 'left'; y += LINE;
+    }
+
+    // Saved (above grand total)
+    if (totalSaved > 0) {
+      ctx.fillStyle = '#c0392b'; ctx.font = '20px -apple-system, sans-serif';
+      ctx.fillText('共省下', PAD, y+24);
+      ctx.font = 'bold 22px -apple-system, sans-serif';
+      ctx.textAlign = 'right'; ctx.fillText(ntd(totalSaved), W-PAD, y+24);
+      ctx.textAlign = 'left'; y += 36;
+    }
+
+    // Grand total
+    ctx.fillStyle = '#a09080'; ctx.font = '24px -apple-system, sans-serif';
+    ctx.fillText('合計', PAD, y+32);
+    ctx.fillStyle = '#7a5840'; ctx.font = 'bold 40px -apple-system, sans-serif';
+    ctx.textAlign = 'right'; ctx.fillText(ntd(grand), W-PAD, y+36);
+    ctx.textAlign = 'left'; y += 56;
+
+    // Note
+    if (note) {
+      ctx.fillStyle = '#b8a090'; ctx.font = '19px -apple-system, sans-serif';
+      ctx.fillText('備註：' + note, PAD, y+24); y += LINE;
+    }
+
+    // Footer
+    ctx.fillStyle = '#c8b8a8'; ctx.font = '17px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('MORE · 即時計算報價', W/2, H-24);
+    ctx.textAlign = 'left';
+
+    const link = document.createElement('a');
+    link.download = 'MORE報價單.png';
+    link.href = cv.toDataURL('image/png');
+    link.click();
+
+    closeScreenshot();
+    const btn = document.getElementById('btnCopy');
+    btn.textContent = '已複製';
+    setTimeout(function(){ btn.textContent = '複製報價單'; }, 2000);
+
+  } catch(e) {
+    const hint = document.getElementById('screenshotHint');
+    hint.style.display = 'block';
+    hint.textContent = '📲 請長按上方圖片儲存';
+    setTimeout(function(){ hint.style.display = 'none'; }, 3000);
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+function openPicker() {
+  document.getElementById('searchInput').value = '';
+  renderPickerList();
+  document.getElementById('pickerOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('searchInput').focus(), 100);
+}
+function closePicker() { document.getElementById('pickerOverlay').classList.remove('show'); }
+function addItem(name) {
+  const p = PRODUCTS.find(x => x.name === name);
+  if (!p) return;
+  const exist = items.find(i => i.name === name);
+  if (exist) items = items.map(i => i.name===name ? {...i, qty: i.qty+1} : i);
+  else items = [...items, {name: p.name, prices: p.prices, qty: 1}];
+  closePicker(); updateScreen();
+}
+function renderPickerList() {
+  const search = document.getElementById('searchInput').value;
+  const existing = new Set(items.map(i => i.name));
+  const filtered = PRODUCTS.filter(p => p.name.includes(search) && !existing.has(p.name));
+  const list = document.getElementById('pickerList');
+  if (filtered.length === 0) { list.innerHTML = '<div class="no-result">找不到商品</div>'; return; }
+  list.innerHTML = filtered.map(p => `
+    <div class="product-option" onclick="addItem('${p.name}')">
+      <span class="product-option-name">${p.name}</span>
+      <span class="product-option-price">${ntd(p.prices[priceType])}</span>
+    </div>`).join('');
+}
+
+function openManager() {
+  renderManagerList();
+  document.getElementById('managerOverlay').classList.add('show');
+}
+function closeManager() { document.getElementById('managerOverlay').classList.remove('show'); updateScreen(); }
+function updateQty(name, qty) {
+  if (qty <= 0) items = items.filter(i => i.name !== name);
+  else items = items.map(i => i.name===name ? {...i, qty} : i);
+  renderManagerList(); updateScreen();
+}
+function removeItem(name) {
+  items = items.filter(i => i.name !== name);
+  renderManagerList(); updateScreen();
+}
+function renderManagerList() {
+  const list = document.getElementById('managerList');
+  if (items.length === 0) { list.innerHTML = '<div class="no-result">尚無商品</div>'; return; }
+  list.innerHTML = items.map(item => {
+    const price = item.prices[priceType];
+    return `<div class="manage-item-row">
+      <div class="manage-item-info">
+        <div class="manage-item-name">${item.name}</div>
+        <div class="manage-item-unit">${ntd(price)} / 件</div>
+      </div>
+      <div class="qty-controls">
+        <button class="btn-qty btn-minus" onclick="updateQty('${item.name}',${item.qty-1})">−</button>
+        <span class="qty-val">${item.qty}</span>
+        <button class="btn-qty btn-plus" onclick="updateQty('${item.name}',${item.qty+1})">＋</button>
+      </div>
+      <div class="manage-item-total">${ntd(price*item.qty)}</div>
+      <button class="btn-remove" onclick="removeItem('${item.name}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function openShipping() {
+  document.getElementById('shippingModal').classList.add('show');
+  setTimeout(() => document.getElementById('shippingInput').focus(), 100);
+}
+function closeShipping() { document.getElementById('shippingModal').classList.remove('show'); }
+function confirmShipping() {
+  shipping = Number(document.getElementById('shippingInput').value) || 0;
+  closeShipping(); updateScreen();
+}
+
+function openNote() {
+  document.getElementById('noteModal').classList.add('show');
+  setTimeout(() => document.getElementById('noteInput').focus(), 100);
+}
+function closeNote() { document.getElementById('noteModal').classList.remove('show'); }
+function confirmNote() {
+  note = document.getElementById('noteInput').value;
+  closeNote(); updateScreen();
+}
+
+function openSummary() {
+  if (items.length === 0) return;
+  const total = items.reduce((s,i) => s + i.prices[priceType]*i.qty, 0);
+  const grand = total + shipping;
+  const totalSaved = priceType > 0 ? items.reduce((s,i) => s+(i.prices[0]-i.prices[priceType])*i.qty, 0) : 0;
+  document.getElementById('summaryBody').innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div class="price-badge" style="margin-bottom:0;">${PRICE_LABELS[priceType]}</div>
+      <span style="font-size:12px; color:#A59482; font-weight:600;">共 ${items.reduce((s,i)=>s+i.qty,0)} 項商品</span>
+    </div>
+    <div>${items.map(i => {
+      const u = i.prices[priceType], sv = (i.prices[0]-u)*i.qty;
+      return `<div class="sum-item-row">
+        <div class="sum-item-info">
+          <div class="sum-item-name">${i.name}</div>
+          <div class="sum-item-sub">${ntd(u)} × ${i.qty}</div>
+        </div>
+        <div class="sum-item-right">
+          <div class="sum-item-total">${ntd(u*i.qty)}</div>
+          ${sv > 0 ? `<div class="sum-saved">省 NT$${sv.toLocaleString()}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('')}</div>
+    <div class="subtotals-box">
+      <div class="sub-row"><span>省下金額</span><span style="color:#c0a898;">${priceType > 0 ? ntd(items.reduce((s,i)=>s+(i.prices[0]-i.prices[priceType])*i.qty,0)) : ntd(0)}</span></div>
+      ${shipping > 0 ? `<div class="sub-row"><span>運費</span><span>${ntd(shipping)}</span></div>` : ''}
+    </div>
+    <div class="grand-box">
+      <div class="grand-box-row">
+        <span class="grand-box-label">總金額</span>
+        <span class="grand-box-amount" style="font-size:20px;">${ntd(grand)}</span>
+      </div>
+    </div>
+    ${note ? `<div class="note-box" style="display:block">備註：${note}</div>` : ''}
+  `;
+  document.getElementById('summaryOverlay').classList.add('show');
+}
+function closeSummary() { document.getElementById('summaryOverlay').classList.remove('show'); }
+
+document.getElementById('screenshotOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeScreenshot(); });
+document.getElementById('pickerOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closePicker(); });
+document.getElementById('managerOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeManager(); });
+document.getElementById('shippingModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeShipping(); });
+document.getElementById('noteModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeNote(); });
+document.getElementById('summaryOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeSummary(); });
+document.getElementById('shippingInput').addEventListener('keydown', e => { if(e.key==='Enter') confirmShipping(); });
+document.getElementById('noteInput').addEventListener('keydown', e => { if(e.key==='Enter') confirmNote(); });
+
+</script>
+
+<!-- Screenshot Modal -->
+<div class="screenshot-overlay" id="screenshotOverlay">
+  <div class="screenshot-wrap">
+    <p style="font-size:11px;color:#fff;text-align:center;margin-bottom:6px;opacity:0.8;">長按圖片可儲存到相簿</p>
+    <div class="receipt-card" id="receiptCard"></div>
+    <p id="screenshotHint" style="display:none;font-size:12px;color:#ffd580;text-align:center;font-weight:700;margin-top:4px;"></p>
+    <div class="screenshot-actions">
+      <button class="btn-screenshot" onclick="saveScreenshot()">如何儲存？</button>
+      <button class="btn-screenshot-cancel" onclick="closeScreenshot()">取消</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Hidden copy code button - invisible on page -->
+<button id="copyCodeBtn" onclick="copySourceCode()" style="position:fixed;bottom:-100px;left:-100px;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;" aria-hidden="true">複製程式碼</button>
+<script>
+function copySourceCode() {
+  const code = document.documentElement.outerHTML;
+  navigator.clipboard.writeText(code).then(function() {
+    const btn = document.getElementById('copyCodeBtn');
+    btn.textContent = '已複製！';
+    setTimeout(function(){ btn.textContent = '複製程式碼'; }, 2000);
+  }).catch(function() {
+    alert('複製失敗，請手動選取原始碼');
+  });
+}
+// Expose function globally so it can be triggered externally if needed
+window.copySourceCode = copySourceCode;
+
+</script>
+
+
+</body>
+</html>
