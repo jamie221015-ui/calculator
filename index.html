@@ -12,7 +12,7 @@
     background: #d6c4b0;
     background-image: radial-gradient(circle at 30% 20%, #e8d8c8 0%, #c8b09a 100%);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
     padding: 16px;
@@ -358,22 +358,6 @@
     flex: 1; padding: 14px; border-radius: 14px;
     border: 1.5px solid #d8c8bc; background: #fff;
     color: #a08870; font-size: 14px; font-weight: 700; cursor: pointer;
-  }
-  .fab-copy-code:active { transform: scale(0.95); }
-  .fab-copy-code.done { background: #c0a898; }
-
-  .fab-copy-code {
-    position: fixed;
-    bottom: 28px; right: 20px;
-    background: #8a6a52; color: #fff;
-    border: none; border-radius: 28px;
-    padding: 12px 20px;
-    font-size: 14px; font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(100,70,40,0.35);
-    z-index: 50;
-    display: flex; align-items: center; gap: 7px;
-    transition: all 0.1s;
   }
   .fab-copy-code:active { transform: scale(0.95); }
   .fab-copy-code.done { background: #c0a898; }
@@ -801,25 +785,6 @@ document.getElementById('noteInput').addEventListener('keydown', e => { if(e.key
 
 
 
-function fabCopy() {
-  var btn = document.getElementById('fabCopyCode');
-  var html = document.documentElement.outerHTML;
-  var blob = new Blob([html], {type: 'text/html;charset=utf-8'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'more-pricing-app.html';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  btn.innerHTML = '<span>✅</span><span>已下載！</span>';
-  btn.classList.add('done');
-  setTimeout(function(){
-    btn.innerHTML = '<span>📋</span><span>複製程式碼</span>';
-    btn.classList.remove('done');
-  }, 2500);
-}
 
 </script>
 
@@ -879,9 +844,5 @@ function fabCopy() {
 </script>
 
 
-
-<button class="fab-copy-code" id="fabCopyCode" onclick="fabCopy()">
-  <span>📋</span><span>複製程式碼</span>
-</button>
 </body>
 </html>
