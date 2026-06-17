@@ -391,10 +391,12 @@
   </div>
 
   <div class="section-label">售價類型</div>
-  <div class="price-tabs">
-    <button class="price-tab active" onclick="setPriceType(0)">原價</button>
-    <button class="price-tab" onclick="setPriceType(1)">優惠價</button>
-    <button class="price-tab" onclick="setPriceType(2)">VIP價</button>
+  <div class="price-tabs" style="flex-wrap:wrap; gap:6px;">
+    <button class="price-tab active" onclick="setPriceType(0)" style="flex:1;min-width:calc(33% - 6px);">原價</button>
+    <button class="price-tab" onclick="setPriceType(1)" style="flex:1;min-width:calc(33% - 6px);">優惠價</button>
+    <button class="price-tab" onclick="setPriceType(2)" style="flex:1;min-width:calc(33% - 6px);">VIP價</button>
+    <button class="price-tab" onclick="setPriceType(3)" style="flex:1;min-width:calc(50% - 6px);">三級加盟價</button>
+    <button class="price-tab" onclick="setPriceType(4)" style="flex:1;min-width:calc(50% - 6px);">實習加盟價</button>
   </div>
 
   <div class="section-label">操作</div>
@@ -472,35 +474,32 @@
 
 <script>
 const PRODUCTS = [
-  { name: "纖纖飲X", prices: [1480, 1380, 1280] },
-  { name: "爆纖錠", prices: [880, 800, 740] },
-  { name: "纖飄錠", prices: [1480, 1380, 1280] },
-  { name: "纖酵宿", prices: [990, 900, 830] },
-  { name: "紫纖飲", prices: [990, 900, 830] },
-  { name: "肽纖飲", prices: [990, 900, 830] },
-  { name: "厚焙奶茶", prices: [990, 900, 830] },
-  { name: "洗髮露", prices: [1280, 1180, 1100] },
-  { name: "養髮液", prices: [1080, 990, 900] },
-  { name: "水光錠", prices: [1680, 1580, 1480] },
-  { name: "婕肌零", prices: [990, 900, 830] },
-  { name: "雪聚露", prices: [1280, 1180, 1100] },
-  { name: "玻尿酸保濕原液", prices: [990, 900, 830] },
-  { name: "急救小白瓶", prices: [1280, 1180, 1100] },
-  { name: "護手霜", prices: [680, 630, 600] },
-  { name: "面模(精裝盒)", prices: [150, 150, 150] },
-  { name: "面模(20片)", prices: [2200, 2200, 2200] },
-  { name: "益生菌", prices: [1280, 1180, 1100] },
-  { name: "葉黃素", prices: [1080, 990, 900] },
-  { name: "晶亮凍", prices: [680, 630, 600] },
-  { name: "固樂纖", prices: [1680, 1580, 1480] },
-  { name: "正冠茶", prices: [990, 900, 830] },
-  { name: "酒國錠", prices: [680, 630, 600] },
-  { name: "爆纖錠體驗包", prices: [240, 240, 240] },
-  { name: "纖酵宿體驗包", prices: [190, 190, 190] },
-  { name: "洗髮露體驗包", prices: [30, 30, 30] },
-  { name: "婕肌零體驗包", prices: [40, 40, 40] },
+  { name: "纖纖飲X", prices: [1480, 1380, 1280, 990, 1160] },
+  { name: "雪花紫纖飲", prices: [1480, 1380, 1280, 635, 780] },
+  { name: "爆纖錠", prices: [880, 800, 740, 560, 660] },
+  { name: "爆纖錠體驗包", prices: [240, 240, 240, 158, 190] },
+  { name: "植萃纖酵宿", prices: [990, 900, 830, 635, 780] },
+  { name: "植萃纖酵宿體驗包", prices: [190, 190, 190, 113, 145] },
+  { name: "肽纖飲", prices: [990, 900, 830, 635, 780] },
+  { name: "葉黃素EX飲", prices: [990, 900, 830, 695, 840] },
+  { name: "晶亮凍", prices: [680, 630, 600, 440, 530] },
+  { name: "益生菌", prices: [1280, 1180, 1100, 830, 990] },
+  { name: "TURBO極速錠", prices: [680, 630, 600, 440, 530] },
+  { name: "正冠茶", prices: [990, 900, 830, 635, 780] },
+  { name: "固樂纖", prices: [1680, 1580, 1480, 1040, 1260] },
+  { name: "水光錠", prices: [1680, 1580, 1480, 1080, 1260] },
+  { name: "水光繃帶面膜(精裝盒)", prices: [700, 650, 600, 500, 550] },
+  { name: "雪聚露", prices: [1280, 1180, 1100, 860, 990] },
+  { name: "婕肌零", prices: [990, 900, 830, 660, 780] },
+  { name: "婕肌零體驗包", prices: [40, 40, 40, 25, 30] },
+  { name: "玻尿酸保濕原液", prices: [990, 900, 830, 660, 780] },
+  { name: "急救小白瓶", prices: [1280, 1180, 1100, 860, 990] },
+  { name: "護手霜", prices: [680, 630, 600, 455, 530] },
+  { name: "洗髮露", prices: [1280, 1180, 1100, 860, 990] },
+  { name: "洗髮露體驗包", prices: [30, 30, 30, 21, 24] },
+  { name: "養髮液", prices: [1080, 990, 900, 720, 840] },
 ];
-const PRICE_LABELS = ["原價", "優惠價", "VIP價"];
+const PRICE_LABELS = ["原價", "優惠價", "VIP價", "三級加盟價", "實習加盟價"];
 const ntd = n => `NT$${Number(n).toLocaleString()}`;
 
 let priceType = 0, items = [], shipping = 0, note = "";
@@ -602,6 +601,28 @@ function openScreenshot() {
     : '';
 
   const totalQty = items.reduce(function(s,i){ return s + i.qty; }, 0);
+
+  // 若是VIP價，在底部顯示實習加盟價與三級加盟價比較
+  var alliancePriceHtml = '';
+  if (priceType === 2) {
+    var shixi_total = items.reduce(function(s,i){ return s + i.prices[4] * i.qty; }, 0);
+    var sanji_total = items.reduce(function(s,i){ return s + i.prices[3] * i.qty; }, 0);
+    var shixi_saved = grand - shixi_total;
+    var sanji_saved = grand - sanji_total;
+    alliancePriceHtml =
+      '<div style="margin-top:12px;background:#faf6f2;border-radius:10px;padding:10px 14px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+      + '<span style="font-size:11px;color:#a09080;">（產品6,600+加盟包200｜實習加盟價）</span>'
+      + '<span style="font-size:13px;color:#7a5840;font-weight:800;">' + ntd(shixi_total)
+      + ' <span style="color:#c0392b;font-size:11px;">省 ' + ntd(shixi_saved) + '</span></span>'
+      + '</div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<span style="font-size:11px;color:#a09080;">（產品19,600+加盟包200｜三級加盟價）</span>'
+      + '<span style="font-size:13px;color:#7a5840;font-weight:800;">' + ntd(sanji_total)
+      + ' <span style="color:#c0392b;font-size:11px;">省 ' + ntd(sanji_saved) + '</span></span>'
+      + '</div>'
+      + '</div>';
+  }
   const totalSaved = showOrig
     ? items.reduce(function(s,i){ return s + (i.prices[0] - i.prices[priceType]) * i.qty; }, 0)
     : 0;
@@ -632,6 +653,7 @@ function openScreenshot() {
     + '<span class="receipt-total-amount">' + ntd(grand) + '</span>'
     + '</div>'
     + noteHtml
+    + alliancePriceHtml
     + '<div class="receipt-footer">感謝您的購買 · MORE</div>';
 
   document.getElementById('screenshotOverlay').classList.add('show');
