@@ -431,18 +431,6 @@
   </div>
 </div>
 
-<!-- Gift Manager -->
-<div class="overlay" id="giftManagerOverlay">
-  <div class="item-sheet">
-    <div class="sheet-header">
-      <div class="sheet-title" style="margin-bottom:0;">🎁 贈品明細</div>
-      <button class="btn-close-x" onclick="closeGiftManager()">✕</button>
-    </div>
-    <div class="product-list" id="giftManagerList"></div>
-    <button class="btn-cancel" style="margin-top:10px" onclick="closeGiftManager()">完成</button>
-  </div>
-</div>
-
 <!-- Product Picker -->
 <div class="overlay" id="pickerOverlay">
   <div class="sheet">
@@ -488,6 +476,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- Summary -->
 <div class="summary-overlay" id="summaryOverlay">
@@ -784,23 +773,64 @@ function removeItem(name) {
 }
 function renderManagerList() {
   const list = document.getElementById('managerList');
-  if (items.length === 0) { list.innerHTML = '<div class="no-result">尚無商品</div>'; return; }
-  list.innerHTML = items.map(item => {
-    const price = item.prices[priceType];
-    return `<div class="manage-item-row">
-      <div class="manage-item-info">
-        <div class="manage-item-name">${item.name}</div>
-        <div class="manage-item-unit">${ntd(price)} / 件</div>
-      </div>
-      <div class="qty-controls">
-        <button class="btn-qty btn-minus" onclick="updateQty('${item.name}',${item.qty-1})">−</button>
-        <span class="qty-val">${item.qty}</span>
-        <button class="btn-qty btn-plus" onclick="updateQty('${item.name}',${item.qty+1})">＋</button>
-      </div>
-      <div class="manage-item-total">${ntd(price*item.qty)}</div>
-      <button class="btn-remove" onclick="removeItem('${item.name}')">✕</button>
-    </div>`;
-  }).join('');
+  let html = '';
+
+  if (items.length > 0) {
+    html += items.map((item, idx) => {
+      const price = item.prices[priceType];
+      return `<div class="manage-item-row">
+        <div class="manage-item-info">
+          <div class="manage-item-name">${item.name}</div>
+          <div class="manage-item-unit">${ntd(price)} / 件</div>
+        </div>
+        <div class="qty-controls">
+          <button class="btn-qty btn-minus" data-act="dec" data-idx="${idx}">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="btn-qty btn-plus" data-act="inc" data-idx="${idx}">＋</button>
+        </div>
+        <div class="manage-item-total">${ntd(price*item.qty)}</div>
+        <button class="btn-remove" data-act="remove" data-idx="${idx}">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  if (gifts.length > 0) {
+    html += '<div style="font-size:11px;color:#b8860b;font-weight:700;margin:12px 0 4px;">🎁 贈品</div>';
+    html += gifts.map((g, idx) => {
+      return `<div class="manage-item-row" style="background:rgba(255,210,0,0.06);border-radius:8px;padding:8px;">
+        <div class="manage-item-info">
+          <div class="manage-item-name" style="color:#b8860b;">${g.name}</div>
+          <div class="manage-item-unit" style="color:#b8860b;">價值 ${ntd(g.prices[0])} / 件</div>
+        </div>
+        <div class="qty-controls">
+          <button class="btn-qty btn-minus" data-act="gdec" data-idx="${idx}">−</button>
+          <span class="qty-val">${g.qty}</span>
+          <button class="btn-qty btn-plus" data-act="ginc" data-idx="${idx}">＋</button>
+        </div>
+        <div class="manage-item-total" style="color:#b8860b;">${ntd(g.prices[0]*g.qty)}</div>
+        <button class="btn-remove" data-act="gremove" data-idx="${idx}">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  if (items.length === 0 && gifts.length === 0) {
+    html = '<div class="no-result">尚無商品</div>';
+  }
+
+  list.innerHTML = html;
+
+  list.querySelectorAll('[data-act]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const act = btn.getAttribute('data-act');
+      const idx = parseInt(btn.getAttribute('data-idx'));
+      if (act === 'dec') updateQty(items[idx].name, items[idx].qty - 1);
+      else if (act === 'inc') updateQty(items[idx].name, items[idx].qty + 1);
+      else if (act === 'remove') removeItem(items[idx].name);
+      else if (act === 'gdec') updateGiftQty(gifts[idx].name, gifts[idx].qty - 1);
+      else if (act === 'ginc') updateGiftQty(gifts[idx].name, gifts[idx].qty + 1);
+      else if (act === 'gremove') removeGift(gifts[idx].name);
+    });
+  });
 }
 
 function openShipping() {
@@ -896,46 +926,25 @@ function renderGiftPickerList() {
   const filtered = PRODUCTS.filter(p => p.name.includes(search));
   const list = document.getElementById('giftPickerList');
   if (filtered.length === 0) { list.innerHTML = '<div class="no-result">找不到商品</div>'; return; }
-  list.innerHTML = filtered.map(p =>
-    `<div class="product-option" onclick="addGift('${p.name}')">
+  list.innerHTML = filtered.map((p, idx) =>
+    `<div class="product-option" data-gift-idx="${idx}">
       <span class="product-option-name">${p.name}</span>
       <span class="product-option-price" style="color:#c0392b;">價值 ${ntd(p.prices[0])}</span>
     </div>`).join('');
+  list.querySelectorAll('.product-option').forEach((el, idx) => {
+    el.addEventListener('click', () => addGift(filtered[idx].name));
+  });
 }
-function openGiftManager() {
-  renderGiftManagerList();
-  document.getElementById('giftManagerOverlay').classList.add('show');
-}
-function closeGiftManager() { document.getElementById('giftManagerOverlay').classList.remove('show'); updateScreen(); }
 function updateGiftQty(name, qty) {
   if (qty <= 0) gifts = gifts.filter(i => i.name !== name);
   else gifts = gifts.map(i => i.name===name ? {...i, qty} : i);
-  renderGiftManagerList(); updateScreen();
+  renderManagerList(); updateScreen();
 }
 function removeGift(name) {
   gifts = gifts.filter(i => i.name !== name);
-  renderGiftManagerList(); updateScreen();
-}
-function renderGiftManagerList() {
-  const list = document.getElementById('giftManagerList');
-  if (gifts.length === 0) { list.innerHTML = '<div class="no-result">尚無贈品</div>'; return; }
-  list.innerHTML = gifts.map(item =>
-    `<div class="manage-item-row">
-      <div class="manage-item-info">
-        <div class="manage-item-name">${item.name}</div>
-        <div class="manage-item-unit" style="color:#b8860b;">價值 ${ntd(item.prices[0])} / 件</div>
-      </div>
-      <div class="qty-controls">
-        <button class="btn-qty btn-minus" onclick="updateGiftQty('${item.name}',${item.qty-1})">−</button>
-        <span class="qty-val">${item.qty}</span>
-        <button class="btn-qty btn-plus" onclick="updateGiftQty('${item.name}',${item.qty+1})">＋</button>
-      </div>
-      <div class="manage-item-total" style="color:#b8860b;">${ntd(item.prices[0]*item.qty)}</div>
-      <button class="btn-remove" onclick="removeGift('${item.name}')">✕</button>
-    </div>`).join('');
+  renderManagerList(); updateScreen();
 }
 document.getElementById('giftPickerOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeGiftPicker(); });
-document.getElementById('giftManagerOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeGiftManager(); });
 
 </script>
 
