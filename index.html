@@ -395,20 +395,46 @@
     <button class="price-tab active" onclick="setPriceType(0)" style="flex:1;min-width:calc(33% - 6px);">原價</button>
     <button class="price-tab" onclick="setPriceType(1)" style="flex:1;min-width:calc(33% - 6px);">優惠價</button>
     <button class="price-tab" onclick="setPriceType(2)" style="flex:1;min-width:calc(33% - 6px);">VIP價</button>
-    <button class="price-tab" onclick="setPriceType(3)" style="flex:1;min-width:calc(50% - 6px);">三級加盟價</button>
-    <button class="price-tab" onclick="setPriceType(4)" style="flex:1;min-width:calc(50% - 6px);">實習加盟價</button>
+    <button class="price-tab" onclick="setPriceType(3)" style="flex:1;min-width:calc(50% - 6px);">實習加盟價</button>
+    <button class="price-tab" onclick="setPriceType(4)" style="flex:1;min-width:calc(50% - 6px);">三級加盟價</button>
   </div>
 
   <div class="section-label">操作</div>
   <div class="btn-grid">
     <button class="calc-btn btn-product" onclick="openPicker()">＋ 選擇商品</button>
-    <button class="calc-btn btn-manage" onclick="openManager()">數量</button>
-    <button class="calc-btn btn-shipping" onclick="openShipping()">運費</button>
-    <button class="calc-btn btn-note" onclick="openNote()">備註</button>
+    <div style="grid-column:span 3;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+      <button class="calc-btn btn-manage" onclick="openManager()">數量</button>
+      <button class="calc-btn btn-shipping" onclick="openShipping()">運費</button>
+      <button class="calc-btn" onclick="openGiftPicker()" style="background:#ede6de;color:#6a5040;box-shadow:0 4px 0 #d8cec4;">贈品</button>
+      <button class="calc-btn btn-note" onclick="openNote()">備註</button>
+    </div>
     <div style="grid-column: span 3; display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
       <button class="calc-btn btn-summary-calc" onclick="openSummary()">總計表</button>
       <button class="calc-btn btn-copy" id="btnCopy" onclick="handleCopy()">報價單</button>
     </div>
+  </div>
+</div>
+
+
+<!-- Gift Picker -->
+<div class="overlay" id="giftPickerOverlay">
+  <div class="sheet">
+    <div class="sheet-title">🎁 選擇贈品</div>
+    <input class="search-input" id="giftSearchInput" placeholder="搜尋贈品名稱..." oninput="renderGiftPickerList()">
+    <div class="product-list" id="giftPickerList"></div>
+    <button class="btn-cancel" onclick="closeGiftPicker()">取消</button>
+  </div>
+</div>
+
+<!-- Gift Manager -->
+<div class="overlay" id="giftManagerOverlay">
+  <div class="item-sheet">
+    <div class="sheet-header">
+      <div class="sheet-title" style="margin-bottom:0;">🎁 贈品明細</div>
+      <button class="btn-close-x" onclick="closeGiftManager()">✕</button>
+    </div>
+    <div class="product-list" id="giftManagerList"></div>
+    <button class="btn-cancel" style="margin-top:10px" onclick="closeGiftManager()">完成</button>
   </div>
 </div>
 
@@ -474,35 +500,36 @@
 
 <script>
 const PRODUCTS = [
-  { name: "纖纖飲X", prices: [1480, 1380, 1280, 990, 1160] },
-  { name: "雪花紫纖飲", prices: [1480, 1380, 1280, 635, 780] },
-  { name: "爆纖錠", prices: [880, 800, 740, 560, 660] },
-  { name: "爆纖錠體驗包", prices: [240, 240, 240, 158, 190] },
-  { name: "植萃纖酵宿", prices: [990, 900, 830, 635, 780] },
-  { name: "植萃纖酵宿體驗包", prices: [190, 190, 190, 113, 145] },
-  { name: "肽纖飲", prices: [990, 900, 830, 635, 780] },
-  { name: "葉黃素EX飲", prices: [990, 900, 830, 695, 840] },
-  { name: "晶亮凍", prices: [680, 630, 600, 440, 530] },
-  { name: "益生菌", prices: [1280, 1180, 1100, 830, 990] },
-  { name: "TURBO極速錠", prices: [680, 630, 600, 440, 530] },
-  { name: "正冠茶", prices: [990, 900, 830, 635, 780] },
-  { name: "固樂纖", prices: [1680, 1580, 1480, 1040, 1260] },
-  { name: "水光錠", prices: [1680, 1580, 1480, 1080, 1260] },
-  { name: "水光繃帶面膜(精裝盒)", prices: [700, 650, 600, 500, 550] },
-  { name: "雪聚露", prices: [1280, 1180, 1100, 860, 990] },
-  { name: "婕肌零", prices: [990, 900, 830, 660, 780] },
-  { name: "婕肌零體驗包", prices: [40, 40, 40, 25, 30] },
-  { name: "玻尿酸保濕原液", prices: [990, 900, 830, 660, 780] },
-  { name: "急救小白瓶", prices: [1280, 1180, 1100, 860, 990] },
-  { name: "護手霜", prices: [680, 630, 600, 455, 530] },
-  { name: "洗髮露", prices: [1280, 1180, 1100, 860, 990] },
-  { name: "洗髮露體驗包", prices: [30, 30, 30, 21, 24] },
-  { name: "養髮液", prices: [1080, 990, 900, 720, 840] },
+  { name: "纖纖飲X", prices: [1480, 1380, 1280, 1160, 990] },
+  { name: "纖飄錠", prices: [1480, 1380, 1280, 1160, 990] },
+  { name: "雪花紫纖飲", prices: [990, 900, 830, 780, 660] },
+  { name: "爆纖錠", prices: [880, 800, 740, 660, 580] },
+  { name: "爆纖錠體驗包", prices: [240, 240, 240, 190, 164] },
+  { name: "植萃纖酵宿", prices: [990, 900, 830, 780, 660] },
+  { name: "植萃纖酵宿體驗包", prices: [190, 190, 190, 145, 117] },
+  { name: "肽纖飲", prices: [990, 900, 830, 780, 660] },
+  { name: "葉黃素EX飲", prices: [1080, 990, 900, 840, 720] },
+  { name: "晶亮凍", prices: [680, 630, 600, 530, 455] },
+  { name: "益生菌", prices: [1280, 1180, 1100, 990, 860] },
+  { name: "TURBO極速錠", prices: [680, 630, 600, 530, 455] },
+  { name: "正冠茶", prices: [990, 900, 830, 780, 660] },
+  { name: "固樂纖", prices: [1680, 1580, 1480, 1260, 1080] },
+  { name: "水光錠", prices: [1680, 1580, 1480, 1260, 1080] },
+  { name: "水光繃帶面膜(精裝盒)", prices: [700, 650, 600, 550, 500] },
+  { name: "雪聚露", prices: [1280, 1180, 1100, 990, 860] },
+  { name: "婕肌零", prices: [990, 900, 830, 780, 660] },
+  { name: "婕肌零體驗包", prices: [40, 40, 40, 30, 25] },
+  { name: "玻尿酸保濕原液", prices: [990, 900, 830, 780, 660] },
+  { name: "急救小白瓶", prices: [1280, 1180, 1100, 990, 860] },
+  { name: "護手霜", prices: [680, 630, 600, 530, 455] },
+  { name: "洗髮露", prices: [1280, 1180, 1100, 990, 860] },
+  { name: "洗髮露體驗包", prices: [30, 30, 30, 24, 21] },
+  { name: "養髮液", prices: [1080, 990, 900, 840, 720] },
 ];
-const PRICE_LABELS = ["原價", "優惠價", "VIP價", "三級加盟價", "實習加盟價"];
+const PRICE_LABELS = ["原價", "優惠價", "VIP價", "實習加盟價", "三級加盟價"];
 const ntd = n => `NT$${Number(n).toLocaleString()}`;
 
-let priceType = 0, items = [], shipping = 0, note = "";
+let priceType = 0, items = [], gifts = [], shipping = 0, note = "";
 
 function setPriceType(t) {
   priceType = t;
@@ -546,14 +573,15 @@ function updateScreen() {
     </div>`;
   }).join('') +
   (shipping > 0 ? `<div class="item-row-screen"><span class="iname">運費</span><span class="iprice">${ntd(shipping)}</span></div>` : '') +
-  (note ? `<div style="color:#8a7050;font-size:10px;margin-top:2px">📝 ${note}</div>` : '');
+  (note ? `<div style="color:#8a7050;font-size:10px;margin-top:2px">📝 ${note}</div>` : '') +
+  (gifts.length > 0 ? gifts.map(g => `<div class="item-row-screen" style="background:rgba(255,210,0,0.08);border-radius:4px;padding:1px 3px;"><span class="iname" style="color:#b8860b;">🎁 ${g.name} ×${g.qty}</span><span style="color:#b8860b;font-size:10px;">價值 ${ntd(g.prices[0]*g.qty)}</span></div>`).join('') : '');
   elDivider.style.display = 'block';
   elTotal.style.display = 'block';
   elTotal.textContent = ntd(grand);
 }
 
 function handleReset() {
-  items = []; shipping = 0; note = "";
+  items = []; gifts = []; shipping = 0; note = "";
   document.getElementById('shippingInput').value = '';
   document.getElementById('noteInput').value = '';
   updateScreen();
@@ -574,17 +602,22 @@ function openScreenshot() {
   items.forEach(function(i) {
     const price = i.prices[priceType] * i.qty;
     const orig = i.prices[0] * i.qty;
+    const saved = orig - price;
     const origHtml = (showOrig && orig !== price)
       ? '<div class="receipt-item-orig">' + ntd(orig) + '</div>'
+      : '';
+    const savedHtml2 = (showOrig && saved > 0)
+      ? '<div style="font-size:11px;color:#c0392b;font-weight:700;">省 NT$' + saved.toLocaleString() + '</div>'
       : '';
     itemsHtml += '<div class="receipt-item">'
       + '<div class="receipt-item-left">'
       + '<div class="receipt-item-name">' + i.name + '</div>'
-      + '<div class="receipt-item-qty">× ' + i.qty + '</div>'
+      + '<div class="receipt-item-qty">' + ntd(i.prices[priceType]) + ' × ' + i.qty + '</div>'
       + '</div>'
       + '<div class="receipt-item-right">'
       + origHtml
       + '<div class="receipt-item-price">' + ntd(price) + '</div>'
+      + savedHtml2
       + '</div>'
       + '</div>';
   });
@@ -605,19 +638,19 @@ function openScreenshot() {
   // 若是VIP價，在底部顯示實習加盟價與三級加盟價比較
   var alliancePriceHtml = '';
   if (priceType === 2) {
-    var shixi_total = items.reduce(function(s,i){ return s + i.prices[4] * i.qty; }, 0);
-    var sanji_total = items.reduce(function(s,i){ return s + i.prices[3] * i.qty; }, 0);
+    var shixi_total = items.reduce(function(s,i){ return s + i.prices[3] * i.qty; }, 0);
+    var sanji_total = items.reduce(function(s,i){ return s + i.prices[4] * i.qty; }, 0);
     var shixi_saved = grand - shixi_total;
     var sanji_saved = grand - sanji_total;
     alliancePriceHtml =
       '<div style="margin-top:12px;background:#faf6f2;border-radius:10px;padding:10px 14px;">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
-      + '<span style="font-size:11px;color:#a09080;">（產品6,600+加盟包200｜實習加盟價）</span>'
+      + '<span style="font-size:11px;color:#a09080;">· 實習加盟價（產品$6,600+加盟包$200）</span>'
       + '<span style="font-size:13px;color:#7a5840;font-weight:800;">' + ntd(shixi_total)
       + ' <span style="color:#c0392b;font-size:11px;">省 ' + ntd(shixi_saved) + '</span></span>'
       + '</div>'
       + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-      + '<span style="font-size:11px;color:#a09080;">（產品19,600+加盟包200｜三級加盟價）</span>'
+      + '<span style="font-size:11px;color:#a09080;">· 三級加盟價（產品$19,600+加盟包$200）</span>'
       + '<span style="font-size:13px;color:#7a5840;font-weight:800;">' + ntd(sanji_total)
       + ' <span style="color:#c0392b;font-size:11px;">省 ' + ntd(sanji_saved) + '</span></span>'
       + '</div>'
@@ -641,18 +674,24 @@ function openScreenshot() {
     + '<div class="receipt-brand-sub">JEROSSE · 照顧健康與美的自信</div></div>'
     + '</div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;">'
     + '<div class="receipt-badge" style="margin-bottom:0;">' + PRICE_LABELS[priceType] + '</div>'
+    + (note ? '<span style="font-size:11px;color:#a09080;">備註：' + note + '</span>' : '')
+    + '</div>'
     + '<span style="font-size:11px;color:#a09080;font-weight:600;">共 ' + totalQty + ' 項商品</span>'
     + '</div>'
     + '<div>' + itemsHtml + '</div>'
+    + (gifts.length > 0 ? '<div style="margin-top:4px;padding-top:4px;border-top:1px dashed #e8dfd6;">' + gifts.map(function(g){return '<div style="background:rgba(255,210,0,0.06);border-radius:6px;padding:6px 8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;font-weight:700;color:#b8860b;">🎁 贈品｜' + g.name + ' × ' + g.qty + '</span><span style="font-size:12px;color:#b8860b;font-weight:700;">價值 ' + ntd(g.prices[0]*g.qty) + '</span></div>';}).join('') + '</div>' : '')
     + '<div class="receipt-divider"></div>'
     + shipHtml
     + savedHtml
-    + '<div class="receipt-total-row">'
-    + '<span class="receipt-total-label">合計</span>'
-    + '<span class="receipt-total-amount">' + ntd(grand) + '</span>'
+    + '<div style="background:#7a6352;border-radius:14px;padding:14px 16px;margin-top:8px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+    + '<span style="color:#DBC8B6;font-size:15px;font-weight:700;">總金額</span>'
+    + '<span style="color:#fff;font-size:22px;font-weight:800;">' + ntd(grand) + '</span>'
     + '</div>'
-    + noteHtml
+    + (shipping > 0 ? '<div style="display:flex;justify-content:space-between;margin-top:6px;"><span style="color:#DBC8B6;font-size:12px;">含運費</span><span style="color:#DBC8B6;font-size:12px;">' + ntd(shipping) + '</span></div>' : '')
+    + '</div>'
     + alliancePriceHtml
     + '<div class="receipt-footer">感謝您的購買 · MORE</div>';
 
@@ -808,6 +847,69 @@ document.getElementById('noteInput').addEventListener('keydown', e => { if(e.key
 
 
 
+// ===== 贈品功能 =====
+function openGiftPicker() {
+  document.getElementById('giftSearchInput').value = '';
+  renderGiftPickerList();
+  document.getElementById('giftPickerOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('giftSearchInput').focus(), 100);
+}
+function closeGiftPicker() { document.getElementById('giftPickerOverlay').classList.remove('show'); }
+
+function addGift(name) {
+  const p = PRODUCTS.find(x => x.name === name);
+  if (!p) return;
+  const exist = gifts.find(i => i.name === name);
+  if (exist) gifts = gifts.map(i => i.name===name ? {...i, qty: i.qty+1} : i);
+  else gifts = [...gifts, {name: p.name, prices: p.prices, qty: 1}];
+  closeGiftPicker(); updateScreen();
+}
+function renderGiftPickerList() {
+  const search = document.getElementById('giftSearchInput').value;
+  const filtered = PRODUCTS.filter(p => p.name.includes(search));
+  const list = document.getElementById('giftPickerList');
+  if (filtered.length === 0) { list.innerHTML = '<div class="no-result">找不到商品</div>'; return; }
+  list.innerHTML = filtered.map(p =>
+    `<div class="product-option" onclick="addGift('${p.name}')">
+      <span class="product-option-name">${p.name}</span>
+      <span class="product-option-price" style="color:#c0392b;">價值 ${ntd(p.prices[0])}</span>
+    </div>`).join('');
+}
+function openGiftManager() {
+  renderGiftManagerList();
+  document.getElementById('giftManagerOverlay').classList.add('show');
+}
+function closeGiftManager() { document.getElementById('giftManagerOverlay').classList.remove('show'); updateScreen(); }
+function updateGiftQty(name, qty) {
+  if (qty <= 0) gifts = gifts.filter(i => i.name !== name);
+  else gifts = gifts.map(i => i.name===name ? {...i, qty} : i);
+  renderGiftManagerList(); updateScreen();
+}
+function removeGift(name) {
+  gifts = gifts.filter(i => i.name !== name);
+  renderGiftManagerList(); updateScreen();
+}
+function renderGiftManagerList() {
+  const list = document.getElementById('giftManagerList');
+  if (gifts.length === 0) { list.innerHTML = '<div class="no-result">尚無贈品</div>'; return; }
+  list.innerHTML = gifts.map(item =>
+    `<div class="manage-item-row">
+      <div class="manage-item-info">
+        <div class="manage-item-name">${item.name}</div>
+        <div class="manage-item-unit" style="color:#b8860b;">價值 ${ntd(item.prices[0])} / 件</div>
+      </div>
+      <div class="qty-controls">
+        <button class="btn-qty btn-minus" onclick="updateGiftQty('${item.name}',${item.qty-1})">−</button>
+        <span class="qty-val">${item.qty}</span>
+        <button class="btn-qty btn-plus" onclick="updateGiftQty('${item.name}',${item.qty+1})">＋</button>
+      </div>
+      <div class="manage-item-total" style="color:#b8860b;">${ntd(item.prices[0]*item.qty)}</div>
+      <button class="btn-remove" onclick="removeGift('${item.name}')">✕</button>
+    </div>`).join('');
+}
+document.getElementById('giftPickerOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeGiftPicker(); });
+document.getElementById('giftManagerOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeGiftManager(); });
+
 </script>
 
 <!-- Screenshot Modal -->
@@ -827,43 +929,7 @@ document.getElementById('noteInput').addEventListener('keydown', e => { if(e.key
 
 <!-- Hidden copy code button - invisible on page -->
 <button id="copyCodeBtn" onclick="copySourceCode()" style="position:fixed;bottom:-100px;left:-100px;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;" aria-hidden="true">複製程式碼</button>
-<script>
-function copySourceCode() {
-  const code = document.documentElement.outerHTML;
-  navigator.clipboard.writeText(code).then(function() {
-    const btn = document.getElementById('copyCodeBtn');
-    btn.textContent = '已複製！';
-    setTimeout(function(){ btn.textContent = '複製程式碼'; }, 2000);
-  }).catch(function() {
-    alert('複製失敗，請手動選取原始碼');
-  });
-}
-// Expose function globally so it can be triggered externally if needed
-window.copySourceCode = copySourceCode;
 
-
-
-function fabCopy() {
-  var btn = document.getElementById('fabCopyCode');
-  var html = document.documentElement.outerHTML;
-  var blob = new Blob([html], {type: 'text/html;charset=utf-8'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'more-pricing-app.html';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  btn.innerHTML = '<span>✅</span><span>已下載！</span>';
-  btn.classList.add('done');
-  setTimeout(function(){
-    btn.innerHTML = '<span>📋</span><span>複製程式碼</span>';
-    btn.classList.remove('done');
-  }, 2500);
-}
-
-</script>
 
 
 </body>
